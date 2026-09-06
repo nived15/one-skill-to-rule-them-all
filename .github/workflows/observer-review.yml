@@ -1,0 +1,59 @@
+name: Copilot observer proposal report
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: copilot-observer-hosted-review
+  cancel-in-progress: false
+
+jobs:
+  review:
+    if: vars.COPILOT_OBSERVER_REVIEW_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      copilot-requests: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          path: repository
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Install observer dependency
+        run: python -m pip install -r repository/.github/skills/task-observer/requirements.txt
+      - name: Prepare explicitly shared, sanitized inputs
+        id: prepare
+        run: >-
+          python repository/.github/skills/task-observer/scripts/review.py
+          --workspace repository --output-dir .observer-review --prepare-only
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        if: steps.prepare.outputs.ready == 'true'
+        with:
+          node-version: '22'
+      - name: Install pinned Copilot CLI
+        if: steps.prepare.outputs.ready == 'true'
+        run: npm install --global @github/copilot@1.0.83 --ignore-scripts
+      - name: Generate a read-only proposal report
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python repository/.github/skills/task-observer/scripts/review.py
+          --output-dir .observer-review --invoke-prepared
+          --max-ai-credits 50 --timeout-seconds 300
+      - name: Upload report only
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: copilot-observer-proposals
+          path: .observer-review/review-report.md
+          if-no-files-found: error
+          retention-days: 7
+          include-hidden-files: true
