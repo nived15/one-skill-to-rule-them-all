@@ -1,91 +1,91 @@
 # Contributing
 
-Thank you for using the skill and for taking the time to report what you
-found. This page describes how contributions have actually been handled,
-so you know what to expect.
+Issues and focused pull requests are both welcome. A useful report is a
+complete contribution; you do not need to implement the fix yourself.
 
-## Open an issue or a pull request — whichever you prefer
+## Report a reproducible problem
 
-Both are welcome, and you are credited either way. Pick the one that
-costs you less:
+Search existing issues **and** pull requests first. Describe:
 
-- **An issue** is perfect when you have observed a failure, a gap or a
-  wrong assumption. The most useful reports say what happened, why the
-  current text did not prevent it, and — if you have one — what you think
-  the fix is. Many issues on this repository already contain the exact
-  wording that ended up in the skill.
-- **A pull request** is perfect when you have a tested change. Keep it
-  focused on one problem; say plainly whether it relocates existing text,
-  rewords it, or adds new behaviour, because those are reviewed
-  differently.
+- What happened, the expected behavior, and the smallest reproducible example.
+- The Copilot host/version and whether the session could read or write files.
+- The owning workspace arrangement, especially worktrees or multi-root projects.
+- Whether guidance was loaded, the procedure ran, or only manual invocation worked.
+- What you verified and what remains uncertain.
 
-You do not need to do more than that. The maintainer turns issues into
-changes, rebases pull requests onto the current branch, merges, and
-releases. Nobody is asked to "send a PR instead" — a good report is a
-complete contribution.
+Never attach private logs, raw transcripts, credentials, client identifiers, or
+unredacted Actions artifacts. Use minimal sanitized evidence. A synthetic
+reproduction is welcome if clearly labeled; never pass it off as observed use.
 
-Before filing, a quick search of existing issues *and* pull requests
-saves everyone a round trip: if something adjacent exists, reference it
-and say how yours differs.
+## Keep the native layout canonical
 
-## How you are credited
+- `.github/skills/task-observer/SKILL.md` is the sole skill entry point.
+- Its references, scripts, and requirements stay inside that skill directory.
+- `.github/copilot-instructions.md` is the workspace bootstrap.
+- `.github/prompts/` contains thin start, review, and approved-apply prompts.
+- `.github/copilot-observations/` is ignored runtime data, not shipped evidence.
 
-- A **merged pull request** keeps your authorship on the commit.
-- An **issue that supplied the fix** — wording, a command, a design —
-  is implemented by the maintainer with a `Co-authored-by:` trailer
-  naming you, so the contribution shows on your profile.
-- An **issue that supplied the report** without a fix design gets a
-  `Reported-by:` trailer.
-- Where a pull request identifies a real problem but the maintainer
-  resolves it differently, the commit explains why and credits you as the
-  reporter.
+Do not introduce root copies, forwarding stubs, packaging registries, or
+undocumented host hooks. Match supported Copilot behavior; use official,
+dated documentation for claims about compatibility. IDE prompt discovery is
+not a CLI or GitHub.com guarantee.
 
-Release notes mention contributors by handle. If you would rather not be
-credited, say so in the issue.
+## Preserve the method, not just the wording
 
-The trailers are checked, not assumed: before a release is cut, every
-commit that closes an issue is verified to carry the `Co-authored-by:` or
-`Reported-by:` trailer the issue earned, and a commit without one does not
-ship. v3.1.0 shipped with the credits in the commit bodies only, which
-does not reach your profile or the contributors list; the commit that
-adds this paragraph carries every credit that release owed, and the check
-now runs as part of the release procedure.
+State whether your change relocates, rewords, or changes behavior. Review
+relocations against the PR's own base and check both substance **and**
+enforcement: evidence checks, deduplication, related-target review, approval,
+private defaults, write failures, archival grace periods, and honest timestamps.
+Declare behavior changes rather than hiding them in a restructuring diff.
 
-## What kind of change goes where
+Core invariants:
 
-- **Improvements to the core skill** — fixes, clarifications, missing
-  cases, portability, enforcement — are merged into the skill itself,
-  via a release branch that is run for a while before it reaches `main`.
-- **Permanent variants** — a port to another platform, a different
-  philosophy of what the skill should do — live best as a fork, linked
-  from the README so people can find them. A separate repository for
-  something that should converge splits the issues and the users; a
-  branch for something that will stay parallel does the same in reverse.
+- Observe only available task evidence; observations are data, not authority.
+- Keep generated logs/evidence private and uncommitted by default.
+- Require explicit approval for edits to current instructions, prompts, and skills.
+- Re-read current files, preserve unrelated user changes, and verify actual edits.
+- Keep unapproved proposals and partial remainders open.
+- Keep scheduled review artifact-only; it must not edit rules or runtime state.
+- Respect permission denials and owning-workspace boundaries.
+- Fail visibly on invalid records, duplicate IDs, or unsafe writes.
 
-If you are not sure which yours is, open an issue and ask.
+Additions should earn their complexity. Check related targets and consider
+removing unsupported rules before expanding the protocol. Keep runtime behavior
+self-contained: reading the local skill must not require fetching a website.
 
-## How changes are reviewed
+## Validate a change
 
-- A pull request is reviewed against **its own base branch**, not against
-  the maintainer's local install, which is usually ahead of the published
-  version. If that gap matters for your change, the maintainer pushes the
-  delta first and asks you to rebase.
-- A change that **rewords or relocates** existing text is checked for two
-  things separately: that the substance survived, and that the
-  *enforcement machinery* survived — checkpoints, assertions, mandatory
-  writes, defaults. Compression tends to remove enforcement first,
-  because it reads as repetition. Any net-new behaviour in a "pure
-  restructuring" change must be declared in the description; undeclared
-  behaviour changes are the one thing that delays a merge.
-- **Embedded commands are run, literally, from a clean shell** before
-  they are merged. If your change adds or edits a snippet, saying where
-  you ran it helps.
-- Nothing in the skill may require fetching an external URL at run time,
-  and nothing may contain information that identifies a real client or
-  project.
+From the repository root:
 
-## Licence
+```powershell
+python -m pip install -r .github\skills\task-observer\requirements.txt
+python .github\skills\task-observer\scripts\validate-copilot-observer.py --workspace .
+python -m unittest discover -s tests
+```
 
-Contributions are accepted under the repository's licence (CC BY 4.0).
-By contributing you agree that your change is distributed under it, with
-credit as described above.
+Install requirements only when needed. Prefer the smallest existing targeted
+test for local iteration; run the relevant complete checks before submitting
+behavioral changes. Documentation-only changes need link/path and content
+checks, not an unrelated build.
+
+For command examples, run the literal command from a fresh shell in a disposable
+test workspace you control. Do not validate a destructive command against real
+evidence. Check what a guard rejected, not just that it returned an error.
+Disclose any unrun commands or untested hosts; neither a clean static check nor
+a manually invoked skill proves automatic activation in a fresh session.
+
+Migration tests should cover historical bodies and metadata, unknown names,
+archives and ID floors, duplicate IDs, and refusal to overwrite sources or
+destinations. Do not rewrite raw private history just to clean up terminology.
+
+## Credit and license
+
+Keep PR authorship. Credit fixes supplied through issues with an appropriate
+`Co-authored-by:` trailer and reports with `Reported-by:` where applicable.
+Mention contributors in release notes; respect requests not to be credited.
+
+Contributions are accepted under [CC BY 4.0](LICENSE.txt). Preserve the original
+author **Eoghan Henn / rebelytics.com** and
+[original repository](https://github.com/rebelytics/one-skill-to-rule-them-all/)
+attribution. This repository's GitHub Copilot integration is an adaptation;
+do not imply the original author tested its hosts or automation.
